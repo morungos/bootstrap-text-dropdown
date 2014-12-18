@@ -3,7 +3,7 @@ gulp = require 'gulp'
 less = require 'gulp-less'
 rename = require 'gulp-rename'
 jasmine = require 'gulp-jasmine'
-notify = require 'gulp-notify'
+mocha = require 'gulp-mocha'
 coffee = require 'gulp-coffee'
 filter = require 'gulp-filter'
 mainBowerFiles = require 'main-bower-files'
@@ -26,8 +26,4 @@ gulp.task 'vendors', () ->
 
 gulp.task 'test', ['coffee', 'vendors'], () ->
   gulp.src './.tmp/js/**/*_test.js'
-    .pipe jasmine()
-    .on 'error', notify.onError({
-      title: 'Jasmine Test Failed',
-      message: 'One or more tests failed, see the cli for details.'
-    })
+    .pipe mocha({reporter: 'spec'})
