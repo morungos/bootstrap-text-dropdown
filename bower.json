@@ -1,0 +1,20 @@
+{
+  "name": "bootstrap-text-dropdown",
+  "version": "0.1.0",
+  "description": "A dropdown text editor that can be used to open a small cell into a bigger text editor",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/morungos/bootstrap-text-dropdown"
+  },
+  "main": [
+    "js/bootstrap-text-dropdown.js",
+    "css/text-dropdown.css"
+  ],
+  "dependencies": {
+    "jquery": ">=1.7.1",
+    "bootstrap": ">=3.0 <4.0"
+  },
+  "devDependencies": {
+    "qunit": "~1.16.0"
+  }
+}
