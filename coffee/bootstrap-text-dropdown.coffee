@@ -1,137 +1,220 @@
-(($) ->
+(($, window, document) ->
 
-  backdrop = '.text-dropdown-backdrop'
-  toggle   = '[data-toggle="text-dropdown"]'
-  Dropdown = (element) ->
-    $(element).on('click.bs.text-dropdown', @toggle)
+  'use strict'
 
-  Dropdown.VERSION = '3.3.1'
+  Textdropdown = (element, options) ->
+    this.widget = ''
+    this.$element = $(element)
+    this.isOpen = options.isOpen
+    this.orientation = options.orientation
+    this.container = options.container
+    @_init()
 
-  Dropdown.prototype.toggle = (e) ->
-    $this = $(@)
+  Textdropdown.prototype =
 
-    return if $this.is('.disabled, :disabled')
+    constructor: Textdropdown
 
-    $parent  = getParent($this)
-    isActive = $parent.hasClass('open')
+    _init: () ->
+      self = @
+      @.$element.on {
+        'click.textdropdown': $.proxy(this.showWidget, this)
+        'blur.textdropdown': $.proxy(this.blurElement, this)
+      }
 
-    clearMenus()
+      @.$widget = $(@getTemplate()).on('click', $.proxy(@widgetClick, @))
+      @.$widget.find('textarea').each () ->
+        $(@).on {
+          'click.textdropdown': () -> $(@).select()
+          'keydown.textdropdown': $.proxy(self.widgetKeydown, self)
+          'keyup.textdropdown': $.proxy(self.widgetKeyup, self)
+        }
 
-    if !isActive
-      if 'ontouchstart' in document.documentElement && !$parent.closest('.navbar-nav').length
-        $('<div class="text-dropdown-backdrop"/>').insertAfter($(this)).on('click', clearMenus)
+    blurElement: () ->
+      @highlightedUnit = null
+      @updateFromElementVal()
 
-      relatedTarget = { relatedTarget: this }
-      $parent.trigger(e = $.Event('show.bs.text-dropdown', relatedTarget))
-
-      return if e.isDefaultPrevented()
-
-      $this
-        .trigger('focus')
-        .attr('aria-expanded', 'true')
-
-      $parent
-        .toggleClass('open')
-        .trigger('shown.bs.text-dropdown', relatedTarget)
-
-    return false
-
-  Dropdown.prototype.keydown = (e) ->
-    return if !/(38|40|27|32)/.test(e.which) or /input|textarea/i.test(e.target.tagName)
-
-    $this = $(this)
-
-    e.preventDefault()
-    e.stopPropagation()
-
-    return if $this.is('.disabled, :disabled')
-
-    $parent  = getParent($this)
-    isActive = $parent.hasClass('open')
-
-    if (!isActive and e.which != 27) or (isActive and e.which == 27)
-      if e.which == 27 then $parent.find(toggle).trigger('focus')
-      return $this.trigger('click')
-
-    desc = ' li:not(.divider):visible a'
-    $items = $parent.find('[role="menu"]' + desc + ', [role="listbox"]' + desc)
-
-    return if !$items.length
-
-    index = $items.index(e.target)
-
-    if e.which == 38 and index > 0                    then index--                        ## up
-    if e.which == 40 and index < $items.length - 1    then index++                        ## down
-    if !~index                                        then index = 0
-
-    $items.eq(index).trigger('focus')
+    clear: () ->
+      @.$element.val('')
 
 
-  clearMenus = (e) ->
-    return if e && e.which == 3 
-    $(backdrop).remove()
-    $(toggle).each () ->
-      $this         = $(this)
-      $parent       = getParent($this)
-      relatedTarget = { relatedTarget: this }
+    elementKeydown: (e) ->
+      @update()
 
-      return if (!$parent.hasClass('open')) 
+    getTemplate: () ->
+      "<div class='bootstrap-textdropdown-widget dropdown-menu'><textarea class='bootstrap-text-dropdown-body'></textarea></div>"
 
-      $parent.trigger(e = $.Event('hide.bs.text-dropdown', relatedTarget))
+    getText: () ->
+      @text
 
-      return if (e.isDefaultPrevented()) 
+    hideWidget: () ->
+      return if @isOpen == false
 
-      $this.attr('aria-expanded', 'false')
-      $parent.removeClass('open').trigger('hidden.bs.text-dropdown', relatedTarget)
+      @.$element.trigger {
+        'type': 'hide.textdropdown'
+        'text': {
+          'value': this.getText()
+        }
+      }
+
+      @.$widget.removeClass('open')
+
+      $(document).off('mousedown.textdropdown, touchend.textdropdown')
+
+      @isOpen = false
+      @.$widget.detach()
+
+    place : () ->
+      return if @isInline
+
+      widgetWidth = @.$widget.outerWidth()
+      widgetHeight = @.$widget.outerHeight()
+      visualPadding = 10
+      windowWidth = $(window).width()
+      windowHeight = $(window).height()
+      scrollTop = $(window).scrollTop()
+
+      zIndex = parseInt(@.$element.parents().first().css('z-index'), 10) + 10
+      offset = if @component then @.omponent.parent().offset() else @.$element.offset()
+      height = if @component then @component.outerHeight(true) else @.$element.outerHeight(false)
+      width = if @component then @component.outerWidth(true) else @.$element.outerWidth(false)
+      left = offset.left
+      top = offset.top
+
+      @.$widget.removeClass('textdropdown-orient-top textdropdown-orient-bottom textdropdown-orient-right textdropdown-orient-left')
+
+      if @orientation.x != 'auto'
+        @picker.addClass('textdropdown-orient-' + this.orientation.x)
+        if @orientation.x == 'right'
+          left -= widgetWidth - width
+      else
+        @.$widget.addClass('textdropdown-orient-left')
+        if offset.left < 0
+          left -= offset.left - visualPadding
+        else if offset.left + widgetWidth > windowWidth
+          left = windowWidth - widgetWidth - visualPadding
+
+      yorient = @.orientation.y
+      topOverflow = undefined
+      bottomOverflow = undefined
+
+      if yorient == 'auto'
+        topOverflow = -scrollTop + offset.top - widgetHeight
+        bottomOverflow = scrollTop + windowHeight - (offset.top + height + widgetHeight)
+        if Math.max(topOverflow, bottomOverflow) == bottomOverflow
+          yorient = 'top'
+        else
+          yorient = 'bottom'
+
+      @.$widget.addClass('textdropdown-orient-' + yorient)
+      if yorient == 'top'
+        top += height
+      else
+        top -= widgetHeight + parseInt(this.$widget.css('padding-top'), 10)
+
+      @.$widget.css {
+        top : top
+        left : left
+        zIndex : zIndex
+      }
+
+    remove: () ->
+      $('document').off('.textdropdown')
+      if @.$widget
+        @.$widget.remove()
+      delete @.$element.data().textdropdown
+
+    setText: (text, ignoreWidget) ->
+      if !text
+        @clear()
+        return
+
+      @text = text
+      @update(ignoreWidget)
+
+    showWidget: (e) ->
+      e.preventDefault()
+      return if @isOpen
+      return if @.$element.is(':disabled')
 
 
-  getParent = ($this) ->
-    selector = $this.attr('data-target')
+      @.$widget.appendTo(this.container)
+      self = @;
+      $(document).on 'mousedown.textdropdown, touchend.textdropdown', (e) ->
+        self.hideWidget() if !(self.$element.parent().find(e.target).length || self.$widget.is(e.target) || self.$widget.find(e.target).length)
 
-    if !selector
-      selector = $this.attr('href')
-      selector = selector and /#[A-Za-z]/.test(selector) and selector.replace(/.*(?=#[^\s]*$)/, '') ## strip for ie7
+      @.$element.trigger {
+        'type': 'show.textdropdown',
+        'text': {
+          'value': this.getText()
+        }
+      }
 
-    $parent = selector and $(selector)
+      @place()
+      @.$element.blur()
 
-    return $parent and $parent.length ? $parent : $this.parent()
+      @.$widget.addClass('open') if @isOpen == false
+      @.$widget.find("textarea").focus()
+      @isOpen = true
+
+    update: (ignoreWidget) ->
+      @updateElement()
+      this.updateWidget() if !ignoreWidget
+
+    updateElement: () ->
+      @.$element.val(@getText()).change()
+
+    updateFromElementVal: () ->
+      @setText(@.$element.val())
+
+    updateWidget: () ->
+      return if (@.$widget == false) 
+
+      text = @text;
+      @.$widget.find('.bootstrap-text-dropdown-body').val(text)
+
+    updateFromWidgetInputs: () ->
+      return if @.$widget == false
+
+      t = @.$widget.find('.bootstrap-text-dropdown-body').val()
+      @setText(t, true)
+
+    widgetClick: (e) ->
+      e.stopPropagation()
+      e.preventDefault()
+
+      $input = $(e.target)
+      action = $input.closest('a').data('action')
+
+      if action
+        @[action]()
+      @update()
+
+    widgetKeyup: (e) ->
+      @updateFromWidgetInputs()
 
 
-  ## DROPDOWN PLUGIN DEFINITION
-  ## ==========================
-
-  Plugin = (option) ->
-    return @each () ->
+  $.fn.textdropdown = (option) ->
+    args = Array.apply(null, arguments)
+    args.shift()
+    @each () ->
       $this = $(@)
-      data  = $this.data('bs.text-dropdown')
+      data = $this.data('textdropdown')
+      options = typeof option == 'object' && option
 
-      if !data then $this.data('bs.text-dropdown', (data = new Dropdown(@)))
-      if typeof option == 'string' then data[option].call($this)
+      if !data
+        $this.data('textdropdown', (data = new Textdropdown(this, $.extend({}, $.fn.textdropdown.defaults, options, $(this).data()))))
 
-  old = $.fn.textDropdown
-
-  $.fn.textDropdown             = Plugin
-  $.fn.textDropdown.Constructor = Dropdown
-
-
-  ## DROPDOWN NO CONFLICT
-  ## ====================
-
-  $.fn.textDropdown.noConflict = () ->
-    $.fn.dropdown = old
-    return @
+      if typeof option == 'string'
+        data[option].apply(data, args)
 
 
-  ## APPLY TO STANDARD DROPDOWN ELEMENTS
-  ## ===================================
+  $.fn.textdropdown.defaults =
+    isOpen: false
+    orientation: { x: 'auto', y: 'auto'}
+    container: 'body'
 
-  $(document)
-    .on 'click.bs.text-dropdown.data-api', clearMenus
-    .on 'click.bs.text-dropdown.data-api', '.dropdown form', (e) -> e.stopPropagation()
-    .on 'click.bs.text-dropdown.data-api', toggle, Dropdown.prototype.toggle
-    .on 'keydown.bs.text-dropdown.data-api', toggle, Dropdown.prototype.keydown
-    .on 'keydown.bs.text-dropdown.data-api', '[role="menu"]', Dropdown.prototype.keydown
-    .on 'keydown.bs.text-dropdown.data-api', '[role="listbox"]', Dropdown.prototype.keydown
+  $.fn.textdropdown.Constructor = Textdropdown
 
 
-) jQuery
+) jQuery, window, document
+
