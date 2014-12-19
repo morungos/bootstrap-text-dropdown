@@ -9,6 +9,7 @@
     this.orientation = options.orientation
     this.container = options.container
     @_init()
+    @
 
   Textdropdown.prototype =
 
@@ -202,7 +203,8 @@
       options = typeof option == 'object' && option
 
       if !data
-        $this.data('textdropdown', (data = new Textdropdown(this, $.extend({}, $.fn.textdropdown.defaults, options, $(this).data()))))
+        data = new Textdropdown(this, $.extend({}, $.fn.textdropdown.defaults, options, $(this).data()))
+        $this.data('textdropdown', data)
 
       if typeof option == 'string'
         data[option].apply(data, args)

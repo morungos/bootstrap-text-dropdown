@@ -7,7 +7,8 @@
     this.isOpen = options.isOpen;
     this.orientation = options.orientation;
     this.container = options.container;
-    return this._init();
+    this._init();
+    return this;
   };
   Textdropdown.prototype = {
     constructor: Textdropdown,
@@ -213,7 +214,8 @@
       data = $this.data('textdropdown');
       options = typeof option === 'object' && option;
       if (!data) {
-        $this.data('textdropdown', (data = new Textdropdown(this, $.extend({}, $.fn.textdropdown.defaults, options, $(this).data()))));
+        data = new Textdropdown(this, $.extend({}, $.fn.textdropdown.defaults, options, $(this).data()));
+        $this.data('textdropdown', data);
       }
       if (typeof option === 'string') {
         return data[option].apply(data, args);
