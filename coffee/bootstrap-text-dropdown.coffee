@@ -18,8 +18,8 @@
     _init: () ->
       self = @
       @.$element.on {
-        'click.textdropdown': $.proxy(this.showWidget, this)
-        'blur.textdropdown': $.proxy(this.blurElement, this)
+        'click.textdropdown': $.proxy(@showWidget, @)
+        'blur.textdropdown': $.proxy(@blurElement, @)
       }
 
       @.$widget = $(@getTemplate()).on('click', $.proxy(@widgetClick, @))
@@ -84,7 +84,7 @@
       @.$widget.removeClass('textdropdown-orient-top textdropdown-orient-bottom textdropdown-orient-right textdropdown-orient-left')
 
       if @orientation.x != 'auto'
-        @picker.addClass('textdropdown-orient-' + this.orientation.x)
+        @picker.addClass('textdropdown-orient-' + @orientation.x)
         if @orientation.x == 'right'
           left -= widgetWidth - width
       else
@@ -110,7 +110,7 @@
       if yorient == 'top'
         top += height
       else
-        top -= widgetHeight + parseInt(this.$widget.css('padding-top'), 10)
+        top -= widgetHeight + parseInt(@.$widget.css('padding-top'), 10)
 
       @.$widget.css {
         top : top
@@ -138,7 +138,7 @@
       return if @.$element.is(':disabled')
 
 
-      @.$widget.appendTo(this.container)
+      @.$widget.appendTo(@container)
       self = @;
       $(document).on 'mousedown.textdropdown, touchend.textdropdown', (e) ->
         self.hideWidget() if !(self.$element.parent().find(e.target).length || self.$widget.is(e.target) || self.$widget.find(e.target).length)
@@ -159,7 +159,7 @@
 
     update: (ignoreWidget) ->
       @updateElement()
-      this.updateWidget() if !ignoreWidget
+      @updateWidget() if !ignoreWidget
 
     updateElement: () ->
       @.$element.val(@getText()).change()
@@ -203,7 +203,7 @@
       options = typeof option == 'object' && option
 
       if !data
-        data = new Textdropdown(this, $.extend({}, $.fn.textdropdown.defaults, options, $(this).data()))
+        data = new Textdropdown(@, $.extend({}, $.fn.textdropdown.defaults, options, $(@).data()))
         $this.data('textdropdown', data)
 
       if typeof option == 'string'
