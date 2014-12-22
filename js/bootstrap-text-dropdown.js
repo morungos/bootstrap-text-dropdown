@@ -25,7 +25,6 @@
           'click.textdropdown': function() {
             return $(this).select();
           },
-          'keydown.textdropdown': $.proxy(self.widgetKeydown, self),
           'keyup.textdropdown': $.proxy(self.widgetKeyup, self)
         });
       });
@@ -52,9 +51,7 @@
       }
       this.$element.trigger({
         'type': 'hide.textdropdown',
-        'text': {
-          'value': this.getText()
-        }
+        'text': this.getText()
       });
       this.$widget.removeClass('open');
       $(document).off('mousedown.textdropdown, touchend.textdropdown');
@@ -133,7 +130,9 @@
     },
     showWidget: function(e) {
       var self;
-      e.preventDefault();
+      if (e != null) {
+        e.preventDefault();
+      }
       if (this.isOpen) {
         return;
       }
@@ -149,9 +148,7 @@
       });
       this.$element.trigger({
         'type': 'show.textdropdown',
-        'text': {
-          'value': this.getText()
-        }
+        'text': this.getText()
       });
       this.place();
       this.$element.blur();
@@ -168,7 +165,9 @@
       }
     },
     updateElement: function() {
-      return this.$element.val(this.getText()).change();
+      var value;
+      value = this.getText();
+      return this.$element.val(value).trigger('change');
     },
     updateFromElementVal: function() {
       return this.setText(this.$element.val());
@@ -201,7 +200,11 @@
       return this.update();
     },
     widgetKeyup: function(e) {
-      return this.updateFromWidgetInputs();
+      this.updateFromWidgetInputs();
+      return this.$element.trigger({
+        'type': 'keyup.textdropdown',
+        'text': this.getText()
+      });
     }
   };
   $.fn.textdropdown = function(option) {
