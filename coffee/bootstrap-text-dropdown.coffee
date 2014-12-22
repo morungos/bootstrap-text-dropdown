@@ -26,7 +26,6 @@
       @.$widget.find('textarea').each () ->
         $(@).on {
           'click.textdropdown': () -> $(@).select()
-          'keydown.textdropdown': $.proxy(self.widgetKeydown, self)
           'keyup.textdropdown': $.proxy(self.widgetKeyup, self)
         }
 
@@ -36,7 +35,6 @@
 
     clear: () ->
       @.$element.val('')
-
 
     elementKeydown: (e) ->
       @update()
@@ -52,9 +50,7 @@
 
       @.$element.trigger {
         'type': 'hide.textdropdown'
-        'text': {
-          'value': this.getText()
-        }
+        'text': @getText()
       }
 
       @.$widget.removeClass('open')
@@ -133,7 +129,7 @@
       @update(ignoreWidget)
 
     showWidget: (e) ->
-      e.preventDefault()
+      e.preventDefault() if e?
       return if @isOpen
       return if @.$element.is(':disabled')
 
@@ -145,9 +141,7 @@
 
       @.$element.trigger {
         'type': 'show.textdropdown',
-        'text': {
-          'value': this.getText()
-        }
+        'text': @getText()
       }
 
       @place()
@@ -162,7 +156,8 @@
       @updateWidget() if !ignoreWidget
 
     updateElement: () ->
-      @.$element.val(@getText()).change()
+      value = @getText()
+      @.$element.val(value).trigger('change')
 
     updateFromElementVal: () ->
       @setText(@.$element.val())
@@ -192,6 +187,10 @@
 
     widgetKeyup: (e) ->
       @updateFromWidgetInputs()
+      @.$element.trigger {
+        'type': 'keyup.textdropdown',
+        'text': @getText()
+      }
 
 
   $.fn.textdropdown = (option) ->
