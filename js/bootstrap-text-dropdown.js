@@ -203,7 +203,8 @@
       this.updateFromWidgetInputs();
       return this.$element.trigger({
         'type': 'keyup.textdropdown',
-        'text': this.getText()
+        'text': this.getText(),
+        'originalEvent': e.originalEvent
       });
     }
   };
