@@ -189,7 +189,8 @@
       @updateFromWidgetInputs()
       @.$element.trigger {
         'type': 'keyup.textdropdown',
-        'text': @getText()
+        'text': @getText(),
+        'originalEvent': e.originalEvent
       }
 
 

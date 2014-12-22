@@ -36,5 +36,6 @@ Events
 
 Event                 | Description
 --------------------- | -----------
-`show.textdropdown`   | Fires when the dropdown is opened. The event's `value` property contains the current text.
-`hide.textdropdown`   | Fires when the dropdown is hidden or closed. The event's `value` property contains the current text.
+`show.textdropdown`   | Fires when the dropdown is opened. The event's `text` property contains the current text.
+`hide.textdropdown`   | Fires when the dropdown is hidden or closed. The event's `text` property contains the current text.
+`keyup.textdropdown`  | Fires when a key is pressed in the dropdown. The event's `text` property contains the current text, and the event's `originalEvent` contains the original event data, including the key code.
