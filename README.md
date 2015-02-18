@@ -20,6 +20,7 @@ Options
 Name          | Type          | Default     | Description
 ------------- | ------------- | ----------- | -----------
 container     | string        | body        | The dropdown will be contained inside this element, defaulting to the document body.
+readonly      | boolean       | false       | Makes the text editor readonly, ideal for display purposes.
 
 
 Methods

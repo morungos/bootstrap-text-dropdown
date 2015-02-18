@@ -8,6 +8,7 @@
     this.isOpen = options.isOpen
     this.orientation = options.orientation
     this.container = options.container
+    this.readonly = options.readonly
     @_init()
     @
 
@@ -40,7 +41,10 @@
       @update()
 
     getTemplate: () ->
-      "<div class='bootstrap-textdropdown-widget dropdown-menu'><textarea class='bootstrap-text-dropdown-body'></textarea></div>"
+      additionalAttributes = ''
+      if @.readonly
+        additionalAttributes = ' readonly '
+      "<div class='bootstrap-textdropdown-widget dropdown-menu'><textarea class='bootstrap-text-dropdown-body' #{additionalAttributes}></textarea></div>"
 
     getText: () ->
       @text
